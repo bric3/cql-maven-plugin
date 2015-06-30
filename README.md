@@ -41,7 +41,7 @@ This plugin has a single goal (`execute`) and runs by default in the `pre-integr
 
 ```xml
 <plugin>
-    <groupId>io.bric3</groupId>
+    <groupId>io.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
     <configuration>
         <username>ajax</username>

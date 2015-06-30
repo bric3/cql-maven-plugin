@@ -1,4 +1,4 @@
-package com.libon.maven.cql;
+package io.bric3.maven;
 
 import static java.nio.file.Files.readAllBytes;
 import static java.util.stream.Collectors.joining;
