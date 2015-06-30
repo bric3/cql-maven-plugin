@@ -5,7 +5,7 @@
 
     <groupId>io.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Simple CQL Maven Plugin</name>
@@ -31,8 +31,8 @@
         <connection>scm:git:git@github.com:bric3/cql-maven-plugin.git</connection>
         <url>scm:git:git@github.com:bric3/cql-maven-plugin.git</url>
         <developerConnection>scm:git:git@github.com:bric3/cql-maven-plugin.git</developerConnection>
-      <tag>cql-maven-plugin-0.1-ov</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <prerequisites>
         <maven>${maven.version}</maven>
