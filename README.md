@@ -1,7 +1,14 @@
 # cql-maven-plugin
 
+
+
 This plugin allows one to execute CQL statements on a cassandra cluster.
 
+**Note this plugin is not deployed on any maven repo, at the moment it is necessary to deploy it on a privately owned maven repository.**
+
+```bash
+mvn clean install
+```
 
 ## Requirements
 
