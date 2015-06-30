@@ -1,9 +1,11 @@
 package com.libon.maven.cql;
 
+import static java.nio.file.Files.readAllBytes;
+import static java.util.stream.Collectors.joining;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.PRE_INTEGRATION_TEST;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -22,8 +24,6 @@ import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 
 /**
  * Executes CQL statements;
- *
- * @threadSafe
  */
 @Mojo(name = "execute",
         defaultPhase = PRE_INTEGRATION_TEST,
@@ -104,7 +104,7 @@ public class CqlExecuteMojo extends AbstractMojo {
         try (Cluster cluster = cluster();
              Session session = cluster.connect(keyspace)) {
             cqlFiles(fileset).stream()
-                             .flatMap(Sneaky.function(this::readContent))
+                             .flatMap(this::readContent)
                              .flatMap(this::toStatements)
                              .peek(this::logStatement)
                              .forEach(new StatementExecutor(session)::execute);
@@ -128,21 +128,25 @@ public class CqlExecuteMojo extends AbstractMojo {
                       .filter((s) -> !s.isEmpty());
     }
 
-    private Stream<String> readContent(File file) throws MojoFailureException, IOException {
+    private Stream<String> readContent(File file) {
         if (!file.exists()) {
             return onMissingFile(file);
         }
 
         getLog().info("Executing file: '" + file.toPath() + "'");
-        return Stream.of(new String(Files.readAllBytes(file.toPath())));
+        try {
+            return Stream.of(new String(readAllBytes(file.toPath())));
+        } catch (IOException ioe) {
+            throw new UncheckedIOException(ioe);
+        }
     }
 
-    private Stream<String> onMissingFile(File file) throws MojoFailureException {
+    private Stream<String> onMissingFile(File file) {
         if (ignoreMissingFile) {
             getLog().error("Specified script " + file.getAbsolutePath() + " does not exist. Ignoring as loadFailureIgnore is true");
             return Stream.empty();
         } else {
-            throw new MojoFailureException("Specified script " + file.getAbsolutePath() + " does not exist.");
+            throw new RuntimeException(new MojoFailureException("Specified script " + file.getAbsolutePath() + " does not exist."));
         }
     }
 
@@ -160,25 +164,14 @@ public class CqlExecuteMojo extends AbstractMojo {
 
     public static List<File> cqlFiles(FileSet fileSet) throws IOException {
         File directory = new File(fileSet.getDirectory());
-        String includes = toString(fileSet.getIncludes());
-        String excludes = toString(fileSet.getExcludes());
+        String includes = fileSet.getIncludes().stream().collect(joining(", "));
+        String excludes = fileSet.getExcludes().stream().collect(joining(", "));
 
         @SuppressWarnings("unchecked")
         List<File> files = FileUtils.getFiles(directory, includes, excludes);
 
         Collections.sort(files);
         return files;
-    }
-
-    private static String toString(List<String> strings) {
-        StringBuilder sb = new StringBuilder();
-        for (String string : strings) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append(string);
-        }
-        return sb.toString();
     }
 
     public class StatementExecutor {
