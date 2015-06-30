@@ -1,2 +1,4 @@
 # cql-maven-plugin
-Execute CQL statements
+
+This plugin allows one to execute CQL statements on a cassandra cluster.
+
