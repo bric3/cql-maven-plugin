@@ -1,5 +1,6 @@
 # cql-maven-plugin
 
+[![Apache License](http://img.shields.io/badge/license-Apache-blue.svg) ](https://github.com/bric3/cql-maven-plugin/blob/master/LICENSE)
 
 
 This plugin allows one to execute CQL statements on a cassandra cluster.
