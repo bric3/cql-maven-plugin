@@ -34,6 +34,15 @@
         <tag>HEAD</tag>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>orange-vallee-thirdparty</id>
+            <name>Orange Vallee Third Party Repository</name>
+            <url>https://build.adm.libon.com/nexus/content/repositories/thirdparty/</url>
+        </repository>
+    </distributionManagement>
+
+
     <prerequisites>
         <maven>${maven.version}</maven>
     </prerequisites>
