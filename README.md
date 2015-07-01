@@ -5,11 +5,38 @@
 
 This plugin allows one to execute CQL statements on a cassandra cluster.
 
-**Note this plugin is not deployed on any maven repo, at the moment it is necessary to deploy it on a privately owned maven repository.**
+**Note this plugin is not deployed on any public maven repo, at the moment it is necessary to deploy it on a privately owned maven repository.**
+
+### To install locally :
 
 ```bash
 mvn clean install
 ```
+
+### To deploy a private maven repo :
+
+Assuming the `pom.xml` is patched with a `distributionManagement` element like 
+
+```xml
+    <distributionManagement>
+        <repository>
+            <id>our-thirdparty</id>
+            <name>Our Third Party Repository</name>
+            <url>https://host/nexus/content/repositories/thirdparty/</url>
+        </repository>
+    </distributionManagement>
+```
+
+Deploy it with the following command line : 
+
+```bash
+mvn versions:set -DnewVersion=0.1
+git commit --all --message="Version 0.1"
+mvn deploy scm:tag
+```
+
+As this plugin is not released on central, it would be preferable to use a suffix to the version it avoid possible collision if this project ever get published on central. That means that version `0.1-myproject` should be used instead of a _raw_ `0.1`.
+
 
 ## Requirements
 
