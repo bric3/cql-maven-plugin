@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.apache.maven.model.FileSet;
@@ -102,7 +103,7 @@ public class CqlExecuteMojo extends AbstractMojo {
         }
 
         try (Cluster cluster = cluster();
-             Session session = cluster.connect(keyspace)) {
+             Session session = connectTo(cluster)) {
             cqlFiles(fileset).stream()
                              .flatMap(this::readContent)
                              .flatMap(this::toStatements)
@@ -112,6 +113,13 @@ public class CqlExecuteMojo extends AbstractMojo {
             throw new MojoExecutionException(e.getMessage(), e);
         }
 
+    }
+    
+    Session connectTo(Cluster cluster) {
+        if (Objects.isNull(keyspace) || keyspace.isEmpty()) {
+            return cluster.connect();
+        }
+        return cluster.connect(keyspace);
     }
 
     private void logStatement(String statement) {
