@@ -51,13 +51,13 @@ This plugin has a single goal (`execute`) and runs by default in the `pre-integr
 #### Mandatory parameters :
 
  * `localDatacenter` : the datacenter name
- * `keyspace` : the cassandra keyspace on which statement will be applied
  * `fileset` : include / exclude CQL files
 
 #### Optional parameters :
 
  * `username` : login, default is `cassandra`
  * `password` : password, default is `cassandra`
+ * `keyspace` : the cassandra keyspace on which statement will be applied
  * `contactPoint` : single contact point, default is `127.0.0.1`
  * `port` : CQL3 or native port, default is `9042`
  * `ignoreMissingFile` : should ignore when a file is not found, if `false` mojo will fail, default is `true`
