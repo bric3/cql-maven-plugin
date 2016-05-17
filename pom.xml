@@ -4,7 +4,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.bric3.maven</groupId>
+    <groupId>com.github.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>

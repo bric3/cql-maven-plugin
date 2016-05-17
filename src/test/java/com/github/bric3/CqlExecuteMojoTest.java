@@ -1,4 +1,4 @@
-package io.bric3.maven;
+package com.github.bric3;
 
 import static org.mockito.Mockito.verify;
 import org.junit.Rule;
@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import com.datastax.driver.core.Cluster;
+import com.github.bric3.CqlExecuteMojo;
 
 public class CqlExecuteMojoTest {
 

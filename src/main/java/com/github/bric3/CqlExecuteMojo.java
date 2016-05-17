@@ -1,4 +1,4 @@
-package io.bric3.maven;
+package com.github.bric3;
 
 import static java.nio.file.Files.readAllBytes;
 import static java.util.stream.Collectors.joining;
