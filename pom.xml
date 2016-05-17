@@ -127,7 +127,7 @@
 
     <profiles>
         <profile>
-            <id>central-deployment</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
