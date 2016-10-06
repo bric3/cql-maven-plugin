@@ -165,8 +165,8 @@ Assuming the `pom.xml` is patched with a `distributionManagement` element like
 Deploy it locally with the following command line : 
 
 ```bash
-mvn versions:set -DnewVersion=0.1-myproject
-git commit --all --message="Version 0.1-myproject"
+mvn versions:set -DnewVersion=0.x-myproject
+git commit --all --message="Version 0.x-myproject"
 mvn deploy scm:tag
 ```
 
@@ -174,10 +174,43 @@ This plugin is released on central, but if crafting your own version it would be
 
 ### To deploy on central
 
+Make sure the `settings.xml` have the following information
+
+```xml
+<servers>                                                                                                                                                                             
+     <server>
+         <id>ossrh</id>
+         <username>login</username>
+         <password>password</password>
+     </server>
+</servers>
+```
+
+```xml
+<profiles>
+    <profile>
+        <id>ossrh</id>
+        <activation>
+            <activeByDefault>true</activeByDefault>
+        </activation>
+        <properties>
+            <gpg.keyname>keyname</gpg.keyname>
+            <gpg.executable>gpg2</gpg.executable>
+            <gpg.passphrase>passphrase</gpg.passphrase>
+        </properties>
+    </profile>
+</profiles>
+```
+
+And perform manual steps, like :
+
 ```bash
 mvn versions:set -DnewVersion=0.4
 git commit --all --message="Version 0.4"
-mvn deploy scm:tag
+git tag cql-maven-plugin-0.4
+mvn -Prelease deploy
 ```
+
+Or use `./maven-central-deploy.sh`
 
 Make sure env is set up properly, more info in OSSRH.md file.

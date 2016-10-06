@@ -6,4 +6,4 @@
 read -p "Really deploy to maven central repository  (yes/no)? "
 [ "$REPLY" != "yes" ] && echo "Didn't deploy anything" && exit 1
 
-mvn release:clean release:prepare release:perform -B -e | tee maven-central-deploy.log
+mvn -Prelease release:clean release:prepare release:perform --batch-mode -e | tee maven-central-deploy.log
