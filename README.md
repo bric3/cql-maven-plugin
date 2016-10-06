@@ -162,13 +162,18 @@ Assuming the `pom.xml` is patched with a `distributionManagement` element like
     </distributionManagement>
 ```
 
-Deploy it with the following command line : 
+Deploy it locally with the following command line : 
 
 ```bash
-mvn versions:set -DnewVersion=0.1
-git commit --all --message="Version 0.1"
+mvn versions:set -DnewVersion=0.1-myproject
+git commit --all --message="Version 0.1-myproject"
 mvn deploy scm:tag
 ```
 
 This plugin is released on central, but if crafting your own version it would be preferable to use a suffix to the version to avoid possible collision with an the coordinate of an artifact deployed on central. That means that version `0.1-myproject` should be used instead of a _raw_ `0.1`.
 
+### To deploy on central
+
+Run `./maven-central-deploy.sh`
+
+Make sure env is set up properly, more info in OSSRH.md file.
