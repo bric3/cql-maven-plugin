@@ -57,7 +57,7 @@
         <maven-plugin-annotations.version>3.4</maven-plugin-annotations.version>
         <cassandra.version>2.0.9</cassandra.version>
         <slf4j.version>1.7.12</slf4j.version>
-        <cassandra-driver.version>2.1.6</cassandra-driver.version>
+        <cassandra-driver.version>3.1.0</cassandra-driver.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -98,8 +98,8 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.10.19</version>
+            <artifactId>mockito-core</artifactId>
+            <version>2.1.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -133,7 +133,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.0</version>
+                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>

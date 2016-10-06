@@ -1,8 +1,18 @@
 package com.github.bric3;
 
-import static java.nio.file.Files.readAllBytes;
-import static java.util.stream.Collectors.joining;
-import static org.apache.maven.plugins.annotations.LifecyclePhase.PRE_INTEGRATION_TEST;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SocketOptions;
+import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
+import com.google.common.base.Stopwatch;
+import org.apache.maven.model.FileSet;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.codehaus.plexus.util.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -11,26 +21,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import org.apache.maven.model.FileSet;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.codehaus.plexus.util.FileUtils;
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SocketOptions;
-import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
+
+import static com.datastax.driver.core.SocketOptions.DEFAULT_READ_TIMEOUT_MILLIS;
+import static java.nio.file.Files.readAllBytes;
+import static java.util.stream.Collectors.joining;
+import static org.apache.maven.plugins.annotations.LifecyclePhase.PRE_INTEGRATION_TEST;
 
 /**
  * Executes CQL statements;
  */
 @Mojo(name = "execute",
-        defaultPhase = PRE_INTEGRATION_TEST,
-        threadSafe = true)
+      defaultPhase = PRE_INTEGRATION_TEST,
+      threadSafe = true)
 public class CqlExecuteMojo extends AbstractMojo {
 
+    public static final Pattern STATEMENT_END = Pattern.compile(";");
     /**
      * Skip the execution.
      */
@@ -91,6 +96,13 @@ public class CqlExecuteMojo extends AbstractMojo {
     @Parameter(property = "cassandra.logStatements", defaultValue = "false")
     private boolean logStatements = false;
 
+    /**
+     * Default timeout longer than usual because this plugin may execute rare but long running
+     * statements like dropping keyspace. The execution can be even longer when the node is running on a VM.
+     */
+    @Parameter(property = "cassandra.readTimeoutMillis")
+    private int readTimeoutMillis = DEFAULT_READ_TIMEOUT_MILLIS * 4;
+
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (skip) {
@@ -112,7 +124,6 @@ public class CqlExecuteMojo extends AbstractMojo {
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
-
     }
     
     Session connectTo(Cluster cluster) {
@@ -123,17 +134,15 @@ public class CqlExecuteMojo extends AbstractMojo {
     }
 
     private void logStatement(String statement) {
-        if(logStatements) {
-            getLog().info("Applying : '" + statement.replaceAll("[\\t\\r\\n ]+", " ") + "'");
+        if (logStatements) {
+            getLog().info("Applying : '" + statement.replaceAll("[\\t\\r\\n ]+", " ") + ";'");
         }
     }
 
     private Stream<String> toStatements(String content) {
-
-        return Pattern.compile(";")
-                      .splitAsStream(content)
-                      .map(String::trim)
-                      .filter((s) -> !s.isEmpty());
+        return STATEMENT_END.splitAsStream(content)
+                            .map(String::trim)
+                            .filter((s) -> !s.isEmpty());
     }
 
     private Stream<String> readContent(File file) {
@@ -151,7 +160,7 @@ public class CqlExecuteMojo extends AbstractMojo {
 
     private Stream<String> onMissingFile(File file) {
         if (ignoreMissingFile) {
-            getLog().error("Specified script " + file.getAbsolutePath() + " does not exist. Ignoring as loadFailureIgnore is true");
+            getLog().error("Specified script " + file.getAbsolutePath() + " does not exist. Ignoring as 'ignoreMissingFile' is true");
             return Stream.empty();
         } else {
             throw new RuntimeException(new MojoFailureException("Specified script " + file.getAbsolutePath() + " does not exist."));
@@ -159,13 +168,14 @@ public class CqlExecuteMojo extends AbstractMojo {
     }
 
     private Cluster cluster() {
-        SocketOptions socketOptions = new SocketOptions();
-        socketOptions.setKeepAlive(true);
-
-        return Cluster.builder().addContactPoints(contactPoint).withPort(port)
+        return Cluster.builder()
+                      .addContactPoints(contactPoint).withPort(port)
                       .withCredentials(username, password)
-                      .withSocketOptions(socketOptions)
-                      .withLoadBalancingPolicy(new DCAwareRoundRobinPolicy(localDatacenter))
+                      .withSocketOptions(new SocketOptions().setKeepAlive(true)
+                                                            .setReadTimeoutMillis(readTimeoutMillis))
+                      .withLoadBalancingPolicy(DCAwareRoundRobinPolicy.builder()
+                                                                      .withLocalDc(localDatacenter)
+                                                                      .build())
                       .build();
     }
 
@@ -190,10 +200,16 @@ public class CqlExecuteMojo extends AbstractMojo {
         }
 
         public void execute(String statement) {
+            Stopwatch watch = Stopwatch.createUnstarted();
             try {
+                watch.start();
                 session.execute(statement);
             } catch (Exception e) {
-                CqlExecuteMojo.this.getLog().error("Failing statement '" + statement + "'", e);
+                getLog().error("Failing statement '" + statement + "'", e);
+            } finally {
+                if (logStatements) {
+                    getLog().info("Statement took : " + watch);
+                }
             }
         }
     }
