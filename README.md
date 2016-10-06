@@ -78,7 +78,7 @@ And you have the following plugin definition :
 <plugin>
     <groupId>com.github.bric3</groupId>
     <artifactId>cql-maven-plugin</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
     <configuration>
         <username>ajax</username>
         <password>******************</password>
@@ -174,6 +174,10 @@ This plugin is released on central, but if crafting your own version it would be
 
 ### To deploy on central
 
-Run `./maven-central-deploy.sh`
+```bash
+mvn versions:set -DnewVersion=0.1-myproject
+git commit --all --message="Version 0.4"
+mvn deploy scm:tag
+```
 
 Make sure env is set up properly, more info in OSSRH.md file.
