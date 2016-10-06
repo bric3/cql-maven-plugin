@@ -175,7 +175,7 @@ This plugin is released on central, but if crafting your own version it would be
 ### To deploy on central
 
 ```bash
-mvn versions:set -DnewVersion=0.1-myproject
+mvn versions:set -DnewVersion=0.4
 git commit --all --message="Version 0.4"
 mvn deploy scm:tag
 ```
