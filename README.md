@@ -31,6 +31,11 @@ This plugin has a single goal (`execute`) and runs by default in the `pre-integr
  * `logStatements` : print every executed statement, default is `false`
  * `skip` : skip plugin execution, default is of course `false`
 
+#### Current limitations
+
+* Comments are not supported [#5](https://github.com/bric3/cql-maven-plugin/issues/5)
+* Batch statements are not supported [#6](https://github.com/bric3/cql-maven-plugin/issues/6)
+
 ### Example
 
 If you have CQL files like (note the semi-column `;` otherwise statements are not correctly identified) :
