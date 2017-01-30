@@ -81,7 +81,7 @@ And you have the following plugin definition :
 
 ```xml
 <plugin>
-    <groupId>com.github.bric3</groupId>
+    <groupId>com.github.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
     <version>0.4</version>
     <configuration>
