@@ -30,6 +30,7 @@ This plugin has a single goal (`execute`) and runs by default in the `pre-integr
  * `ignoreMissingFile` : should ignore when a file is not found, if `false` mojo will fail, default is `true`
  * `logStatements` : print every executed statement, default is `false`
  * `skip` : skip plugin execution, default is of course `false`
+ * `javaDriverClientConfig` : Datastax Java Driver Client configuration file, default is null. Setting this parameters will tell the plugin that the configuration is handled by this file and will ignore `username`,`password`,`keyspace`,`contactPoint`,`port` parameters
 
 #### Current limitations
 
@@ -83,7 +84,7 @@ And you have the following plugin definition :
 <plugin>
     <groupId>com.github.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
-    <version>0.4</version>
+    <version>1.0.0</version>
     <configuration>
         <username>ajax</username>
         <password>******************</password>
@@ -136,6 +137,99 @@ And you have the following plugin definition :
 </plugin>
 
 ```
+
+#### Using configuration file
+
+The driver can be configured with a configuration [file](https://docs.datastax.com/en/developer/java-driver/4.14/manual/core/configuration/) (it uses the [lightbend config format](https://github.com/lightbend/config)).
+
+**Known limitation** : Within an execution, you have to specify a dedicated configuration file if you want to override the global plugin configuration. This is a known issue and we're working on this.
+
+Given a Datastax Java Driver Client at path `${project.basedir}/cassandra.conf` and `${project.basedir}/cassandra-install-phase2.conf` defining the previous example plugin configuration :
+
+`${project.basedir}/cassandra.conf`
+```
+datastax-java-driver {
+    basic.contact-points = [ "cassandra.dc1.local:9043" ]
+    basic.request.basic.request.timeout = 40000
+    basic.load-balancing-policy.local-datacenter = DC1
+    basic.session-keyspace = system
+    advanced.auth-provider {
+        class = PlainTextAuthProvider
+        username = ajax
+        password = ******************
+    }
+}
+```
+
+`${project.basedir}/cassandra-install-phase2.conf` (provided you use maven resource filtering to replace `${cassandra.model.keyspace}` with the actual value)
+```
+datastax-java-driver {
+    basic.contact-points = [ "cassandra.dc1.local:9043" ]
+    basic.request.basic.request.timeout = 40000
+    basic.load-balancing-policy.local-datacenter = DC1
+    basic.session-keyspace = ${cassandra.model.keyspace}
+    advanced.auth-provider {
+        class = PlainTextAuthProvider
+        username = ajax
+        password = ******************
+    }
+}
+```
+
+The plugin config should be updated like this :
+```
+<plugin>
+    <groupId>com.github.bric3.maven</groupId>
+    <artifactId>cql-maven-plugin</artifactId>
+    <version>1.0.0</version>
+    <configuration>
+        <ignoreMissingFile>true</ignoreMissingFile>
+        <logStatements>true</logStatements>
+        <javaDriverClientConfig>${project.basedir}/cassandra.conf</javaDriverClientConfig>
+    </configuration>
+    <executions>
+        <execution>
+            <id>generate_keyspaces</id>
+            <phase>install</phase>
+            <goals>
+                <goal>execute</goal>
+            </goals>
+            <configuration>
+                <fileset>
+                    <directory>${project.build.directory}/classes/cassandra/all-keyspaces</directory>
+                    <includes>
+                        <include>*.cql3</include>
+                    </includes>
+                    <excludes>
+                        <exclude>${cassandra.cql3.exclude}</exclude>
+                    </excludes>
+                </fileset>
+            </configuration>
+        </execution>
+        <execution>
+            <id>rebuild_model_keyspace_cql3</id>
+            <phase>install</phase>
+            <goals>
+                <goal>execute</goal>
+            </goals>
+            <configuration>
+                <javaDriverClientConfig>${project.basedir}/cassandra-install-phase2.conf</javaDriverClientConfig>
+                <fileset>
+                    <directory>${project.build.directory}/classes/cassandra/model</directory>
+                    <includes>
+                        <include>*.cql3</include>
+                    </includes>
+                    <excludes>
+                        <exclude>${cassandra.cql3.exclude}</exclude>
+                    </excludes>
+                </fileset>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+
 
 
 ### Notes
