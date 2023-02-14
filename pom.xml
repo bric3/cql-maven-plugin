@@ -5,7 +5,7 @@
 
     <groupId>com.github.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
     <packaging>maven-plugin</packaging>
 
     <name>Simple CQL Maven Plugin</name>
@@ -55,9 +55,8 @@
     <properties>
         <maven.version>3.3.3</maven.version>
         <maven-plugin-annotations.version>3.4</maven-plugin-annotations.version>
-        <cassandra.version>2.0.9</cassandra.version>
         <slf4j.version>1.7.12</slf4j.version>
-        <cassandra-driver.version>3.1.0</cassandra-driver.version>
+        <cassandra-driver.version>4.14.1</cassandra-driver.version>
 
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -67,8 +66,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.datastax.cassandra</groupId>
-            <artifactId>cassandra-driver-core</artifactId>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-core</artifactId>
             <version>${cassandra-driver.version}</version>
         </dependency>
 
@@ -83,6 +82,11 @@
             <artifactId>maven-plugin-annotations</artifactId>
             <version>${maven-plugin-annotations.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -109,7 +113,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.3</version>
+                <version>3.6.4</version>
                 <configuration>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
                 </configuration>

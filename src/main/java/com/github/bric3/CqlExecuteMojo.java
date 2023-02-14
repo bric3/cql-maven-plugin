@@ -1,10 +1,10 @@
 package com.github.bric3;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
-import com.datastax.driver.core.SocketOptions;
-import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
-import com.google.common.base.Stopwatch;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.CqlSessionBuilder;
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.maven.model.FileSet;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -16,15 +16,17 @@ import org.codehaus.plexus.util.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static com.datastax.driver.core.SocketOptions.DEFAULT_READ_TIMEOUT_MILLIS;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.PRE_INTEGRATION_TEST;
 
 /**
@@ -101,7 +103,17 @@ public class CqlExecuteMojo extends AbstractMojo {
      * statements like dropping keyspace. The execution can be even longer when the node is running on a VM.
      */
     @Parameter(property = "cassandra.readTimeoutMillis")
-    private int readTimeoutMillis = DEFAULT_READ_TIMEOUT_MILLIS * 4;
+    private int readTimeoutMillis = 10000 * 4;
+
+    /**
+     * Datastax Java Driver configuration file application.conf path, the values of the configuration file will be used
+     * discarding all the following cql-maven-plugin properties related to cassandra client configuration :
+     * cassandra.port, cassandra.username, cassandra.password cassandra.readTimeoutMillis, cassandra.keyspace,
+     * cassandra.datacenter, cassandra.host
+     * see : https://docs.datastax.com/en/developer/java-driver/4.4/manual/core/configuration/
+     */
+    @Parameter(property = "cassandra.javaDriverClientConfig")
+    private String javaDriverClientConfig;
 
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -114,23 +126,15 @@ public class CqlExecuteMojo extends AbstractMojo {
             return;
         }
 
-        try (Cluster cluster = cluster();
-             Session session = connectTo(cluster)) {
+        try (CqlSession cqlSession = buildCqlSession()) {
             cqlFiles(fileset).stream()
-                             .flatMap(this::readContent)
-                             .flatMap(this::toStatements)
-                             .peek(this::logStatement)
-                             .forEach(new StatementExecutor(session)::execute);
+                    .flatMap(this::readContent)
+                    .flatMap(this::toStatements)
+                    .peek(this::logStatement)
+                    .forEach(new StatementExecutor(cqlSession)::execute);
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
-    }
-    
-    Session connectTo(Cluster cluster) {
-        if (Objects.isNull(keyspace) || keyspace.isEmpty()) {
-            return cluster.connect();
-        }
-        return cluster.connect(keyspace);
     }
 
     private void logStatement(String statement) {
@@ -167,16 +171,26 @@ public class CqlExecuteMojo extends AbstractMojo {
         }
     }
 
-    private Cluster cluster() {
-        return Cluster.builder()
-                      .addContactPoints(contactPoint).withPort(port)
-                      .withCredentials(username, password)
-                      .withSocketOptions(new SocketOptions().setKeepAlive(true)
-                                                            .setReadTimeoutMillis(readTimeoutMillis))
-                      .withLoadBalancingPolicy(DCAwareRoundRobinPolicy.builder()
-                                                                      .withLocalDc(localDatacenter)
-                                                                      .build())
-                      .build();
+    private CqlSession buildCqlSession() {
+        CqlSessionBuilder builder = CqlSession.builder();
+        if (javaDriverClientConfig == null) {
+            List<InetSocketAddress> contactPoints = Pattern.compile(",")
+                    .splitAsStream(contactPoint)
+                    .map(host -> new InetSocketAddress(host, port))
+                    .collect(toList());
+            builder.addContactPoints(contactPoints)
+                    .withAuthCredentials(username, password)
+                    .withConfigLoader(DriverConfigLoader
+                            .programmaticBuilder()
+                            .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofMillis(readTimeoutMillis))
+                            .build());
+            Optional.ofNullable(localDatacenter).ifPresent(builder::withLocalDatacenter);
+            Optional.ofNullable(keyspace).ifPresent(builder::withKeyspace);
+            return builder.build();
+        }
+        getLog().info(String.format("Using configuration file : %s", javaDriverClientConfig));
+        return builder.withConfigLoader(DriverConfigLoader.fromFile(FileUtils.getFile(javaDriverClientConfig)))
+                .build();
     }
 
 
@@ -193,14 +207,14 @@ public class CqlExecuteMojo extends AbstractMojo {
     }
 
     public class StatementExecutor {
-        private Session session;
+        private CqlSession session;
 
-        public StatementExecutor(Session session) {
+        public StatementExecutor(CqlSession session) {
             this.session = session;
         }
 
         public void execute(String statement) {
-            Stopwatch watch = Stopwatch.createUnstarted();
+            StopWatch watch = new StopWatch();
             try {
                 watch.start();
                 session.execute(statement);
