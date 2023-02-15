@@ -7,9 +7,9 @@ This plugin allows one to execute CQL statements on a cassandra cluster.
 
 ## Requirements
 
- * Java 8
- * Maven 3.3.3 (maybe older version work, but this has not been tested)
- * Apache Cassandra 1.2, 2.0, 2.1, 2.2 or 3.0 (driver is 3.1.0, see [driver compatibility matrix](http://docs.datastax.com/en/developer/java-driver//3.1/manual/native_protocol/))
+* Java 11
+* Maven 3.3.3 (maybe older version work, but this has not been tested)
+* Apache Cassandra 1.2, 2.0, 2.1, 2.2 or 3.0 (driver is 3.1.0, see [driver compatibility matrix](http://docs.datastax.com/en/developer/java-driver//3.1/manual/native_protocol/))
 
 ## Configuration
 
@@ -135,7 +135,6 @@ And you have the following plugin definition :
         </execution>
     </executions>
 </plugin>
-
 ```
 
 #### Using configuration file
@@ -177,7 +176,8 @@ datastax-java-driver {
 ```
 
 The plugin config should be updated like this :
-```
+
+```xml
 <plugin>
     <groupId>com.github.bric3.maven</groupId>
     <artifactId>cql-maven-plugin</artifactId>
@@ -234,82 +234,11 @@ The plugin config should be updated like this :
 
 ### Notes
 
-* The driver may warn users when a name returns multiple IP addresses, due to a change in 3.0.0. See : [JAVA-975](https://datastax-oss.atlassian.net/browse/JAVA-975)
+* The driver may warn users when a name returns multiple IP addresses,
+  due to a change in 3.0.0. See : [JAVA-975](https://datastax-oss.atlassian.net/browse/JAVA-975)
 
-  > §13. If a DNS name resolves to multiple A-records, `Cluster.Builder#addContactPoint(String)` will now use all of these addresses as contact points. This gives you the possibility of maintaining contact points in DNS configuration, and having a single, static contact point in your Java code.
+  > §13. If a DNS name resolves to multiple A-records, `Cluster.Builder#addContactPoint(String)`
+  > will now use all of these addresses as contact points. This gives you the possibility of
+  > maintaining contact points in DNS configuration, and having a single, static contact point
+  > in your Java code.
 
-
-## For cql-maven-plugin developers 
-
-### To install locally :
-
-```bash
-mvn clean install
-```
-
-### To deploy a private maven repo :
-
-Assuming the `pom.xml` is patched with a `distributionManagement` element like 
-
-```xml
-    <distributionManagement>
-        <repository>
-            <id>our-thirdparty</id>
-            <name>Our Third Party Repository</name>
-            <url>https://host/nexus/content/repositories/thirdparty/</url>
-        </repository>
-    </distributionManagement>
-```
-
-Deploy it locally with the following command line : 
-
-```bash
-mvn versions:set -DnewVersion=0.x-myproject
-git commit --all --message="Version 0.x-myproject"
-mvn deploy scm:tag
-```
-
-This plugin is released on central, but if crafting your own version it would be preferable to use a suffix to the version to avoid possible collision with an the coordinate of an artifact deployed on central. That means that version `0.1-myproject` should be used instead of a _raw_ `0.1`.
-
-### To deploy on central
-
-Make sure the `settings.xml` have the following information
-
-```xml
-<servers>                                                                                                                                                                             
-     <server>
-         <id>ossrh</id>
-         <username>login</username>
-         <password>password</password>
-     </server>
-</servers>
-```
-
-```xml
-<profiles>
-    <profile>
-        <id>ossrh</id>
-        <activation>
-            <activeByDefault>true</activeByDefault>
-        </activation>
-        <properties>
-            <gpg.keyname>keyname</gpg.keyname>
-            <gpg.executable>gpg2</gpg.executable>
-            <gpg.passphrase>passphrase</gpg.passphrase>
-        </properties>
-    </profile>
-</profiles>
-```
-
-And perform manual steps, like :
-
-```bash
-mvn versions:set -DnewVersion=0.4
-git commit --all --message="Version 0.4"
-git tag cql-maven-plugin-0.4
-mvn -Prelease deploy
-```
-
-Or use `./maven-central-deploy.sh`
-
-Make sure env is set up properly, more info in OSSRH.md file.
