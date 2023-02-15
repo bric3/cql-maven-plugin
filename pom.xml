@@ -28,6 +28,13 @@
                 <role>Java Developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>sachetpa@gmail.com</id>
+            <name>Patrick Sachet</name>
+            <roles>
+                <role>Java Developer</role>
+            </roles>
+        </developer>
     </developers>
 
     <scm>
