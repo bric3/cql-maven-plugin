@@ -32,17 +32,20 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
-      # - name: Set version
-      #   run: mvn versions:set -DnewVersion="${{github.event.release.tag_name}}" --no-transfer-progress
-      # or
-      #   run: mvn versions:set -DnewVersion="${{github.event.inputs.releaseversion}}" --no-transfer-progress
+      - name: Set version
+        if: github.event_name == 'release' # && github.event.release.prerelease == false
+        run: |
+          mvn versions:set -DnewVersion="${{github.event.release.tag_name}}" --no-transfer-progress
+          mvn versions:commit
+          git commit --all --message="Version ${{github.event.release.tag_name}}"
+          git push
 
-      - run: |
-          mvn --version
-          cat $GITHUB_WORKSPACE/settings.xml
+      - name: Set custom version
+        if: github.event_name == 'workflow_dispatch'
+        run: mvn versions:set -DnewVersion="${{github.event.inputs.releaseversion}}" --no-transfer-progress
 
       - name: Build with Maven
-        run: mvn --batch-mode package --file pom.xml
+        run: mvn --batch-mode package --file pom.xml --no-transfer-progress
 
       - name: Publish package to Central
         run: mvn -Prelease deploy --settings $GITHUB_WORKSPACE/settings.xml --file pom.xml
