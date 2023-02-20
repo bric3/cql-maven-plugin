@@ -50,12 +50,18 @@ jobs:
           gpg-passphrase: MAVEN_GPG_PASSPHRASE # env variable for GPG private key passphrase
           settings-path: ${{ github.workspace }} # location for the settings.xml file
 
+      - name: Configure git
+        run: |
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+
       - name: Set version
         if: github.event_name == 'release' # && github.event.release.prerelease == false
         run: |
           mvn versions:set -DnewVersion="${{ steps.version.outputs.version }}" --no-transfer-progress
           mvn versions:commit
           git commit --all --message="Version ${{ steps.version.outputs.version }}"
+          git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/bric3/cql-maven-plugin.git
           git push
 
       - name: Set custom version
