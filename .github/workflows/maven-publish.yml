@@ -17,8 +17,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      # export the version for the build job
+      version: ${{ steps.version.outputs.version }}
+
     steps:
       - uses: actions/checkout@v3
+
+      - name: Check semver version in tag
+        id: version
+        if: github.event_name == 'release'
+        run: |
+          prefix="v"
+          tag_name="${{ github.event.release.tag_name }}"
+          semver_regex="(0|[1-9]\d*)+\.(0|[1-9]\d*)+\.(0|[1-9]\d*)+(-(([a-z-][\da-z-]+|[\da-z-]+[a-z-][\da-z-]*|0|[1-9]\d*)(\.([a-z-][\da-z-]+|[\da-z-]+[a-z-][\da-z-]*|0|[1-9]\d*))*))?(\\+([\da-z-]+(\.[\da-z-]+)*))?"
+          echo "Checking version: $semver_regex"
+          echo "$tag_name" | grep -Eq "^$prefix$semver_regex\$"
+
+          echo "version=${tag_name#$prefix}" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
@@ -35,9 +53,9 @@ jobs:
       - name: Set version
         if: github.event_name == 'release' # && github.event.release.prerelease == false
         run: |
-          mvn versions:set -DnewVersion="${{github.event.release.tag_name}}" --no-transfer-progress
+          mvn versions:set -DnewVersion="${{ steps.version.outputs.version }}" --no-transfer-progress
           mvn versions:commit
-          git commit --all --message="Version ${{github.event.release.tag_name}}"
+          git commit --all --message="Version ${{ steps.version.outputs.version }}"
           git push
 
       - name: Set custom version
