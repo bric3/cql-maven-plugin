@@ -60,9 +60,16 @@ jobs:
         run: |
           mvn versions:set -DnewVersion="${{ steps.version.outputs.version }}" --no-transfer-progress
           mvn versions:commit
-          git commit --all --message="Version ${{ steps.version.outputs.version }}"
-          git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/bric3/cql-maven-plugin.git
-          git push
+
+      # TODO update master with new version
+      # Only if final version, i.e. not alpha, not rc
+#      - name: Configure git
+#        run: |
+#          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+#          git config --global user.name "${{ github.actor }}"
+#          git commit --all --message="Version ${{ steps.version.outputs.version }}"
+#          git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/bric3/cql-maven-plugin.git
+#          git push
 
       - name: Set custom version
         if: github.event_name == 'workflow_dispatch'
