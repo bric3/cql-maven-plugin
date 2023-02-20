@@ -9,7 +9,7 @@ This plugin allows one to execute CQL statements on a cassandra cluster.
 
 * Java 11
 * Maven 3.3.3 (maybe older version work, but this has not been tested)
-* Apache Cassandra 1.2, 2.0, 2.1, 2.2 or 3.0 (driver is 3.1.0, see [driver compatibility matrix](http://docs.datastax.com/en/developer/java-driver//3.1/manual/native_protocol/))
+* Apache Cassandra 2.1, 2.2, 3.x, 4.x (driver is 4.11+, see [driver compatibility matrix](https://docs.datastax.com/en/driver-matrix/docs/java-drivers.html))
 
 ## Configuration
 
