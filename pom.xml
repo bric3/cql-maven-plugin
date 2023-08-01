@@ -73,6 +73,7 @@
         <slf4j.version>1.7.12</slf4j.version>
         <cassandra-driver.version>4.14.1</cassandra-driver.version>
         <commons-lang.version>2.6</commons-lang.version>
+        <plexus-utils.version>4.0.0</plexus-utils.version>
 
         <!-- test deps -->
         <assertj-core.version>3.24.2</assertj-core.version>
@@ -115,6 +116,11 @@
             <artifactId>maven-model</artifactId>
             <version>${maven.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>${plexus-utils.version}</version>
         </dependency>
 
         <!-- Test deps -->
